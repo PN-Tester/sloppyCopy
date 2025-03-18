@@ -1,5 +1,5 @@
 # Copy/Paste file content without clipboard
-Sometimes you may need to copy paste data between applications or environments with restrictions in place preventing you from using the clipboard. In these cases, instead of typing the content by hand, possibly for hours, you can use sloppyCopy.
+Sometimes you may need to copy/paste data between applications or environments with restrictions in place preventing you from using the clipboard. In these cases, instead of typing the content by hand, possibly for hours, you can use sloppyCopy.
 This program parses the input file you specify and simulates keyboard events for each character of the file after user specified delay, effectively automating the task of typing out the content.
 
 # Rational
