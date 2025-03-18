@@ -8,6 +8,8 @@ In this case, you can still copy various lengthy scripts to the target computer 
 
 # Usage
 ```sloppyCopy.exe <file> <delay>```
+
+
 Simply point sloppyCopy.exe at the file you wish to parse for input, and specify the time in seconds between run and start of keyboard simulation. In this timeframe, click somewhere in the target application where your keyboard events will go.
 
 WARNING : There is currently no way to stop sloppyCopy once the simulation begins, so ensure you have your cursor in the right place to receive keyboard events or things will get messy !
