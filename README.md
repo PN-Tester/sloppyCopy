@@ -7,11 +7,15 @@ The program is useful for pentesters in specific circumstances where traditional
 In this case, you can still copy various lengthy scripts or executables to the target computer via sloppyCopy. In case of executables, use the ```--portable``` flag to have sloppyCopy first compress the file and base64 encode the content so that it can be simulated without error.
 
 # Usage
-```sloppyCopy.exe <file> <delay> [--portable]```
+```sloppyCopy.exe <file> <delay> [--portable] [--citrix]```
 
 
 Simply point sloppyCopy.exe at the file you wish to parse for input, and specify the time in seconds between run and start of keyboard simulation. In this timeframe, click somewhere in the target application where your keyboard events will go.
 
 SloppyCopy can also be used on executable files, it will compress and base64 encode the data before performing the simulation. just add the optional --portable argument.
+
+CITRIX NOTE : Some Citrix environments use special scancodes added to keyboard events in order to differentiate between hardware generated events and the resultant citrix generated virtual event.
+This results in duplication of copied data, meaning abcdef becomes aabbccddeeff
+use the --citrix flag to enter run the program under citrix compatibility mode to avoid this problem if it occurs. Still working on support for the pesky ~ character which for some reason is not supported. If you absolutely need tilde, use --citrix with --portable option to copy the compressed base64 and avoid errors. 
 
 WARNING : There is currently no way to stop sloppyCopy once the simulation begins, so ensure you have your cursor in the right place to receive keyboard events or things will get messy !
