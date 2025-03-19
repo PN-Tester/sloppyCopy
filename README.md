@@ -6,6 +6,9 @@ This program parses the input file you specify and simulates keyboard events for
 The program is useful for pentesters in specific circumstances where traditional file upload mechanisms are restricted. For example, after performing a breakout from a citrix environment where clipboard is disabled, and outbound access is filtered (HTTP, DNS, etc.) 
 In this case, you can still copy various lengthy scripts or executables to the target computer via sloppyCopy. In case of executables, use the ```--portable``` flag to have sloppyCopy first compress the file and base64 encode the content so that it can be simulated without error.
 
+# Demo
+![](https://github.com/PN-Tester/sloppyCopy/blob/main/sloppyCopy_demo.gif)
+
 # Usage
 ```sloppyCopy.exe <file> <delay> [--portable] [--citrix]```
 
