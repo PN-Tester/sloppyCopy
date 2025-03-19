@@ -59,13 +59,13 @@ class Program
 
         if (!File.Exists(filePath))
         {
-            Console.WriteLine("File not found: " + filePath);
+            Console.WriteLine("[-] File not found: " + filePath);
             return;
         }
 
         if (!int.TryParse(args[1], out int delayInSeconds))
         {
-            Console.WriteLine("Invalid number for delay.");
+            Console.WriteLine("[-] Invalid number for delay.");
             return;
         }
 
@@ -82,27 +82,50 @@ class Program
             else if (args[i] == "--citrix")
             {
                 isCitrix = true;
-                Console.WriteLine("Running in Citrix Compatibility Mode");
+                Console.WriteLine("[!] Running in Citrix Compatibility Mode");
             }
         }
 
         string content;
+        long fileSize = new FileInfo(filePath).Length; // Get the size of the original file in bytes
+        Console.WriteLine($"[!] Original file size: {fileSize} bytes");
+
+        double transferRate = 336.0; // bytes per second
+        double estimatedTimeSeconds = fileSize / transferRate; // Time estimate for regular file
+        TimeSpan estimatedTime = TimeSpan.FromSeconds(estimatedTimeSeconds);
+        Console.WriteLine($"[!] Estimated time to completion (regular): {estimatedTime.Minutes} minutes {estimatedTime.Seconds} seconds");
 
         if (isPortable)
         {
             string tempTarGz = Path.Combine(Path.GetTempPath(), "temp_sloppyCopy.tar.gz");
 
-            Console.WriteLine("Creating compressed copy...");
+            Console.WriteLine("[!] Creating compressed copy...");
             Process.Start("tar", $"-czf \"{tempTarGz}\" \"{filePath}\"")?.WaitForExit();
 
             if (!File.Exists(tempTarGz))
             {
-                Console.WriteLine("Compression failed.");
+                Console.WriteLine("[-] Compression failed.");
                 return;
             }
 
-            content = Convert.ToBase64String(File.ReadAllBytes(tempTarGz));
+            // Read the compressed file into a byte array
+            byte[] compressedData = File.ReadAllBytes(tempTarGz);
 
+            // Convert to Base64
+            string base64Data = Convert.ToBase64String(compressedData);
+
+            // Get the actual size of the Base64 encoded data
+            long base64Size = base64Data.Length;
+            Console.WriteLine($"[!] Base64 compressed data size: {base64Size} bytes");
+
+            // Estimate time based on the actual size of the Base64 data
+            double estimatedPortableTimeSeconds = base64Size / transferRate;
+            TimeSpan estimatedPortableTime = TimeSpan.FromSeconds(estimatedPortableTimeSeconds);
+            Console.WriteLine($"[!] Estimated time to completion (Base64 compressed): {estimatedPortableTime.Minutes} minutes {estimatedPortableTime.Seconds} seconds");
+
+            content = base64Data;
+
+            // Clean up the temporary compressed file
             File.Delete(tempTarGz);
         }
         else
@@ -110,21 +133,22 @@ class Program
             content = File.ReadAllText(filePath);
         }
 
-        Console.WriteLine($"Waiting for {delayInSeconds} seconds...");
+        Console.WriteLine($"[!] Waiting for {delayInSeconds} seconds...");
         Thread.Sleep(delayInSeconds * 1000);
 
         foreach (char c in content)
         {
             SimulateKeyPress(c, isCitrix);
-            Thread.Sleep(5);
+            //Thread.Sleep(1);
         }
 
-        Console.WriteLine("Simulation complete.");
+        Console.WriteLine("[+] Simulation complete.");
         if (isPortable)
         {
-            Console.WriteLine("You can decompress data with :\ncertutil -decode input.txt output.tar.gz && tar -xf output.tar.gz");
+            Console.WriteLine("[!] You can decompress data with :\ncertutil -decode input.txt output.tar.gz && tar -xf output.tar.gz");
         }
     }
+
 
     // Simulate a key press using keybd_event
     static void SimulateKeyPress(char c, bool isCitrix)
