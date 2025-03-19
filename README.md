@@ -15,7 +15,8 @@ Simply point sloppyCopy.exe at the file you wish to parse for input, and specify
 SloppyCopy can also be used on executable files, it will compress and base64 encode the data before performing the simulation. just add the optional --portable argument.
 
 CITRIX NOTE : Some Citrix environments use special scancodes added to keyboard events in order to differentiate between hardware generated events and the resultant citrix generated virtual event.
-This results in duplication of copied data, meaning abcdef becomes aabbccddeeff
-use the --citrix flag to enter run the program under citrix compatibility mode to avoid this problem if it occurs. Still working on support for the pesky ~ character which for some reason is not supported. If you absolutely need tilde, use --citrix with --portable option to copy the compressed base64 and avoid errors. 
+This results in duplication of copied data, meaning abcdef becomes aabbccddeeff.
+To prevent this, use the --citrix flag for compatibility mode.
+Still working on support for the pesky ~ character which for some reason is not supported. If you absolutely need tilde, use --citrix with --portable option to copy the compressed base64 and avoid errors. 
 
 WARNING : There is currently no way to stop sloppyCopy once the simulation begins, so ensure you have your cursor in the right place to receive keyboard events or things will get messy !
