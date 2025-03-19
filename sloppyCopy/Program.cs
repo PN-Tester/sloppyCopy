@@ -1,7 +1,8 @@
-﻿using System;
+using System;
 using System.IO;
 using System.Threading;
 using System.Runtime.InteropServices;
+using System.Diagnostics; // For Process.Start()
 
 class Program
 {
@@ -31,45 +32,62 @@ class Program
 
     static void Main(string[] args)
     {
-        // Check if the file path and delay argument are provided
-        if (args.Length != 2)
+        if (args.Length < 2 || args.Length > 3)
         {
-            Console.WriteLine("Usage: sloppyCopy.exe <file> <delay>");
+            Console.WriteLine("Usage: sloppyCopy.exe <file> <delay> [--portable]");
             return;
         }
 
-        // Path to the input file
         string filePath = args[0];
 
-        // Check if the file exists
         if (!File.Exists(filePath))
         {
             Console.WriteLine("File not found: " + filePath);
             return;
         }
 
-        // Parse the delay argument
         if (!int.TryParse(args[1], out int delayInSeconds))
         {
             Console.WriteLine("Invalid number for delay.");
             return;
         }
 
-        // Read the content of the file
-        string content = File.ReadAllText(filePath);
+        bool isPortable = args.Length == 3 && args[2] == "--portable";
+        string content;
 
-        // Wait for the specified number of seconds before starting the simulation
+        if (isPortable)
+        {
+            string tempTarGz = Path.Combine(Path.GetTempPath(), "temp_sloppyCopy.tar.gz");
+
+            Console.WriteLine("Creating compressed copy...");
+            Process.Start("tar", $"-czf \"{tempTarGz}\" \"{filePath}\"")?.WaitForExit();
+
+            if (!File.Exists(tempTarGz))
+            {
+                Console.WriteLine("Compression failed.");
+                return;
+            }
+
+            content = Convert.ToBase64String(File.ReadAllBytes(tempTarGz));
+
+            File.Delete(tempTarGz);
+        }
+        else
+        {
+            content = File.ReadAllText(filePath);
+        }
+
         Console.WriteLine($"Waiting for {delayInSeconds} seconds...");
-        Thread.Sleep(delayInSeconds * 1000); // Convert seconds to milliseconds
+        Thread.Sleep(delayInSeconds * 1000);
 
-        // Simulate the keyboard keypresses
         foreach (char c in content)
         {
             SimulateKeyPress(c);
-            Thread.Sleep(10); // Add a slight delay to simulate human typing speed
+            Thread.Sleep(5);
         }
 
         Console.WriteLine("Simulation complete.");
+        Console.WriteLine("You can decompress data with :\ncertutil -decode input.txt output.tar.gz && tar -xf output.tar.gz");
     }
 
     // Simulate a key press using keybd_event
