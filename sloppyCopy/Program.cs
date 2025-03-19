@@ -90,10 +90,17 @@ class Program
         long fileSize = new FileInfo(filePath).Length; // Get the size of the original file in bytes
         Console.WriteLine($"[!] Original file size: {fileSize} bytes");
 
-        double transferRate = 336.0; // bytes per second
-        double estimatedTimeSeconds = fileSize / transferRate; // Time estimate for regular file
+        // Set the transfer rate to 64 bytes per second if either Citrix or Portable mode is active
+        double transferRate = (isPortable) ? 64.0 : 336.0;
+
+        // Estimate time for regular file
+        double estimatedTimeSeconds = fileSize / transferRate;
         TimeSpan estimatedTime = TimeSpan.FromSeconds(estimatedTimeSeconds);
-        Console.WriteLine($"[!] Estimated time to completion (regular): {estimatedTime.Minutes} minutes {estimatedTime.Seconds} seconds");
+
+        if (!isPortable)
+        {
+            Console.WriteLine($"[!] Estimated time to completion (regular): {estimatedTime.Minutes} minutes {estimatedTime.Seconds} seconds");
+        }
 
         if (isPortable)
         {
@@ -139,7 +146,11 @@ class Program
         foreach (char c in content)
         {
             SimulateKeyPress(c, isCitrix);
-            //Thread.Sleep(1);
+
+            if (isPortable)
+            {
+                Thread.Sleep(1);  // Add delay for portable mode otherwise characters are desynced
+            }
         }
 
         Console.WriteLine("[+] Simulation complete.");
@@ -148,6 +159,7 @@ class Program
             Console.WriteLine("[!] You can decompress data with :\ncertutil -decode input.txt output.tar.gz && tar -xf output.tar.gz");
         }
     }
+
 
 
     // Simulate a key press using keybd_event
