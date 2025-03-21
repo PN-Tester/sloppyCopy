@@ -15,11 +15,11 @@ In this case, you can still copy various lengthy scripts or executables to the t
 
 Simply point sloppyCopy.exe at the file you wish to parse for input, and specify the time in seconds between run and start of keyboard simulation. In this timeframe, click somewhere in the target application where your keyboard events will go.
 
-SloppyCopy can also be used on executable files, it will compress and base64 encode the data before performing the simulation. just add the optional --portable argument.
+SloppyCopy can also be used on executable files, it will compress and base64 encode the data before performing the simulation. just add the optional ```--portable``` argument. Once the data has been transfered to your target, follow the instruction in the terminal output to base64 decode and decompress the binary to its original state.
 
-CITRIX NOTE : Some Citrix environments use special scancodes added to keyboard events in order to differentiate between hardware generated events and the resultant citrix generated virtual event.
-This results in duplication of copied data, meaning abcdef becomes aabbccddeeff.
-To prevent this, use the --citrix flag for compatibility mode.
-Still working on support for the pesky ~ character which for some reason is not supported. If you absolutely need tilde, use --citrix with --portable option to copy the compressed base64 and avoid errors. 
+CITRIX NOTE : Citrix environments use special scancodes added to keyboard events in order to differentiate between hardware generated events and the resultant citrix generated virtual event.
+This behaviour causes a duplication of transfered data due to double registration of the keyboard event, meaning *abcdef* becomes *aabbccddeeff* on the target system! Very annoying!
+To prevent this, use the ```--citrix``` flag for compatibility mode. This will send only the keyboard events with the scancodes so keypresses are only registered once in the citrix app.
+I am still working on support for the pesky ```~``` character which for some reason is not supported. If you absolutely need tilde, use --citrix with --portable option to copy the compressed base64 and avoid errors. 
 
 WARNING : There is currently no way to stop sloppyCopy once the simulation begins, so ensure you have your cursor in the right place to receive keyboard events or things will get messy !
