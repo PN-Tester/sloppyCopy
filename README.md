@@ -20,6 +20,6 @@ SloppyCopy can also be used on executable files, it will compress and base64 enc
 CITRIX NOTE : Citrix environments use special scancodes added to keyboard events in order to differentiate between hardware generated events and the resultant citrix generated virtual event.
 This behaviour causes a duplication of transfered data due to double registration of the keyboard event, meaning *abcdef* becomes *aabbccddeeff* on the target system! Very annoying!
 To prevent this, use the ```--citrix``` flag for compatibility mode. This will send only the keyboard events with the scancodes so keypresses are only registered once in the citrix app.
-I am still working on support for the pesky ```~``` character which for some reason is not supported. If you absolutely need tilde, use ```--citrix``` with ```--portable``` option to copy the compressed base64 and avoid errors. 
+```~``` character for some reason is not supported. If you absolutely need tilde, use ```--citrix``` with ```--portable``` option to copy the compressed base64 and avoid errors. 
 
 WARNING : There is currently no way to stop sloppyCopy once the simulation begins, so ensure you have your cursor in the right place to receive keyboard events or things will get messy !
