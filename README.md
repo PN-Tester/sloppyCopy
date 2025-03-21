@@ -1,6 +1,6 @@
 # Copy/Paste file content without clipboard
 Sometimes you may need to copy/paste data between applications or environments with restrictions in place preventing you from using the clipboard. In these cases, instead of typing the content by hand, possibly for hours, you can use sloppyCopy.
-This program parses the input file you specify and simulates keyboard events for each character of the file after user specified delay, effectively automating the task of typing out the content. SloppyCopy supports data transfer rates of approximate 2.70 kpbs in normal mode and 0.5 kbps for portable mode.
+This program parses the input file you specify and simulates keyboard events for each character of the file after user specified delay, effectively automating the task of typing out the content. SloppyCopy supports data transfer rates of approximate 2.70 kbps in normal mode and 0.5 kbps for portable mode.
 
 # Rationale
 The program is useful for pentesters in specific circumstances where traditional file upload mechanisms are restricted. For example, after performing a breakout from a citrix environment where clipboard is disabled, and outbound access is filtered (HTTP, DNS, etc.) 
