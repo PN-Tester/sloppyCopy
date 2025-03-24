@@ -3,6 +3,8 @@ using System.IO;
 using System.Threading;
 using System.Runtime.InteropServices;
 using System.Diagnostics; // For Process.Start()
+using System.IO.Compression;
+using System.Text;
 
 class Program
 {
@@ -49,9 +51,9 @@ class Program
 
     static void Main(string[] args)
     {
-        if (args.Length < 2 || args.Length > 4) // Adjust the argument length check
+        if (args.Length < 2 || args.Length > 5)
         {
-            Console.WriteLine("Usage: sloppyCopy.exe <file> <delay> [--portable] [--citrix]");
+            Console.WriteLine("Usage: sloppyCopy.exe <file> <delay> [--portable] [--citrix] [--uri]");
             return;
         }
 
@@ -71,8 +73,8 @@ class Program
 
         bool isPortable = false;
         bool isCitrix = false;
+        bool isUriMode = false;
 
-        // Check if --portable or --citrix flags are present
         for (int i = 2; i < args.Length; i++)
         {
             if (args[i] == "--portable")
@@ -84,20 +86,27 @@ class Program
                 isCitrix = true;
                 Console.WriteLine("[!] Running in Citrix Compatibility Mode");
             }
+            else if (args[i] == "--uri")
+            {
+                isUriMode = true;
+            }
+        }
+
+        if (isUriMode && isPortable)
+        {
+            Console.WriteLine("[-] Error: --uri mode is not compatible with --portable.");
+            return;
         }
 
         string content;
-        long fileSize = new FileInfo(filePath).Length; // Get the size of the original file in bytes
+        long fileSize = new FileInfo(filePath).Length;
         Console.WriteLine($"[!] Original file size: {fileSize} bytes");
 
-        // Set the transfer rate to 64 bytes per second if either Citrix or Portable mode is active
-        double transferRate = (isPortable) ? 64.0 : 336.0;
-
-        // Estimate time for regular file
+        double transferRate = (isPortable || isUriMode) ? 64.0 : 336.0;
         double estimatedTimeSeconds = fileSize / transferRate;
         TimeSpan estimatedTime = TimeSpan.FromSeconds(estimatedTimeSeconds);
 
-        if (!isPortable)
+        if (!isPortable && !isUriMode)
         {
             Console.WriteLine($"[!] Estimated time to completion (regular): {estimatedTime.Minutes} minutes {estimatedTime.Seconds} seconds");
         }
@@ -115,25 +124,55 @@ class Program
                 return;
             }
 
-            // Read the compressed file into a byte array
             byte[] compressedData = File.ReadAllBytes(tempTarGz);
-
-            // Convert to Base64
             string base64Data = Convert.ToBase64String(compressedData);
-
-            // Get the actual size of the Base64 encoded data
             long base64Size = base64Data.Length;
+
             Console.WriteLine($"[!] Base64 compressed data size: {base64Size} bytes");
 
-            // Estimate time based on the actual size of the Base64 data
             double estimatedPortableTimeSeconds = base64Size / transferRate;
             TimeSpan estimatedPortableTime = TimeSpan.FromSeconds(estimatedPortableTimeSeconds);
             Console.WriteLine($"[!] Estimated time to completion (Base64 compressed): {estimatedPortableTime.Minutes} minutes {estimatedPortableTime.Seconds} seconds");
 
             content = base64Data;
-
-            // Clean up the temporary compressed file
             File.Delete(tempTarGz);
+        }
+        else if (isUriMode)
+        {
+            Console.WriteLine("[!] Creating HTML page with GZIP-compressed data embedded...");
+
+            // Read the file bytes
+            byte[] fileData = File.ReadAllBytes(filePath);
+
+            // Gzip compress the data
+            byte[] compressedData;
+            using (MemoryStream compressedStream = new MemoryStream())
+            {
+                using (GZipStream gzipStream = new GZipStream(compressedStream, CompressionMode.Compress))
+                {
+                    gzipStream.Write(fileData, 0, fileData.Length);
+                }
+                compressedData = compressedStream.ToArray();
+            }
+
+            // Base64 encode the gzip compressed data
+            string base64Data = Convert.ToBase64String(compressedData);
+
+            // Generate the new HTML page with dynamic decompression logic
+            string newHtmlPage = GenerateHtmlWithDecompression(base64Data);
+
+            // Base64 encode the new HTML page (the one containing decompression logic)
+            string base64EncodedHtml = Convert.ToBase64String(Encoding.UTF8.GetBytes(newHtmlPage));
+
+            content = "data:text/html;base64," + base64EncodedHtml;
+
+            long base64Size = content.Length;
+
+            Console.WriteLine($"[!] Base64 encoded HTML size (including decompression logic): {base64Size} bytes");
+
+            double estimatedUriTimeSeconds = base64Size / transferRate;
+            TimeSpan estimatedUriTime = TimeSpan.FromSeconds(estimatedUriTimeSeconds);
+            Console.WriteLine($"[!] Estimated time to completion (HTML with GZIP data): {estimatedUriTime.Minutes} minutes {estimatedUriTime.Seconds} seconds");
         }
         else
         {
@@ -146,19 +185,90 @@ class Program
         foreach (char c in content)
         {
             SimulateKeyPress(c, isCitrix);
-
-            if (isPortable)
+            if (isPortable || isUriMode)
             {
-                Thread.Sleep(1);  // Add delay for portable mode otherwise characters are desynced
+                Thread.Sleep(1);
             }
         }
 
         Console.WriteLine("[+] Simulation complete.");
+
         if (isPortable)
         {
             Console.WriteLine("[!] You can decompress data with :\ncertutil -decode input.txt output.tar.gz && tar -xf output.tar.gz");
         }
+        if (isUriMode)
+        {
+            Console.WriteLine("[!] To view the file, simply open the data URI in a browser.");
+        }
     }
+
+    // Generate the new HTML page with gzip data embedded and dynamic decompression logic
+    public static string GenerateHtmlWithDecompression(string base64GzipData)
+    {
+        string htmlTemplate = $@"
+<!DOCTYPE html>
+<html lang='en'>
+<head>
+    <meta charset='UTF-8'>
+    <meta name='viewport' content='width=device-width, initial-scale=1.0'>
+    <title>SloppyCopy Decompressed Data</title>
+    <style>
+        body {{
+            background-color: #0f0f0f;
+            color: #00ff99;
+            font-family: 'Courier New', monospace;
+            text-align: center;
+            padding: 20px;
+        }}
+        h1 {{
+            font-size: 24px;
+            text-shadow: 0 0 5px #00ff99;
+        }}
+        #output {{
+            border: 1px solid #00ff99;
+            padding: 10px;
+            margin-top: 20px;
+            white-space: pre-wrap;
+            text-align: left;
+        }}
+    </style>
+    <script>
+        // Decompresses base64 encoded GZIP string. Returns a string with original text.
+        const decompress = base64string => {{
+            const bytes = Uint8Array.from(atob(base64string), c => c.charCodeAt(0));
+            const cs = new DecompressionStream('gzip');
+            const writer = cs.writable.getWriter();
+            writer.write(bytes);
+            writer.close();
+            return new Response(cs.readable).arrayBuffer().then(function (arrayBuffer) {{
+                return new TextDecoder().decode(arrayBuffer);
+            }});
+        }};
+
+        // On page load, decompress the base64 data and display the original content as HTML
+        window.onload = function() {{
+            const base64Data = `{base64GzipData}`;
+            decompress(base64Data).then(decompressedText => {{
+                document.getElementById('output').innerHTML = decompressedText;
+            }}).catch(error => {{
+                console.error('Decompression failed:', error);
+                document.getElementById('output').textContent = 'Decompression failed.';
+            }});
+        }};
+    </script>
+</head>
+<body>
+    <h1>SloppyCopy Decompressed Data</h1>
+    <div id='output'>Decompressing...</div>
+</body>
+</html>";
+
+        return htmlTemplate;
+    }
+
+
+
 
 
 
