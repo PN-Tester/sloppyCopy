@@ -11,6 +11,7 @@ SloppyCopy now supports transfering HTML data via specially crafted data-uri ! U
 ![](https://github.com/PN-Tester/sloppyCopy/blob/main/sloppyCopy_demo.gif)
 
 # Demo (data uri)
+![](https://github.com/PN-Tester/sloppyCopy/blob/main/data-uri.gif)
 
 # Usage
 ```sloppyCopy.exe <file> <delay> [--portable] [--citrix] [--uri]```
