@@ -210,31 +210,7 @@ class Program
 <!DOCTYPE html>
 <html lang='en'>
 <head>
-    <meta charset='UTF-8'>
-    <meta name='viewport' content='width=device-width, initial-scale=1.0'>
-    <title>SloppyCopy Decompressed Data</title>
-    <style>
-        body {{
-            background-color: #0f0f0f;
-            color: #00ff99;
-            font-family: 'Courier New', monospace;
-            text-align: center;
-            padding: 20px;
-        }}
-        h1 {{
-            font-size: 24px;
-            text-shadow: 0 0 5px #00ff99;
-        }}
-        #output {{
-            border: 1px solid #00ff99;
-            padding: 10px;
-            margin-top: 20px;
-            white-space: pre-wrap;
-            text-align: left;
-        }}
-    </style>
     <script>
-        // Decompresses base64 encoded GZIP string. Returns a string with original text.
         const decompress = base64string => {{
             const bytes = Uint8Array.from(atob(base64string), c => c.charCodeAt(0));
             const cs = new DecompressionStream('gzip');
@@ -246,20 +222,16 @@ class Program
             }});
         }};
 
-        // On page load, decompress the base64 data and display the original content as HTML
         window.onload = function() {{
             const base64Data = `{base64GzipData}`;
             decompress(base64Data).then(decompressedText => {{
                 document.getElementById('output').innerHTML = decompressedText;
-            }}).catch(error => {{
-                console.error('Decompression failed:', error);
-                document.getElementById('output').textContent = 'Decompression failed.';
             }});
         }};
     </script>
 </head>
 <body>
-    <h1>SloppyCopy Decompressed Data</h1>
+    <h1>SLOPPYCOPY DATA</h1>
     <div id='output'>Decompressing...</div>
 </body>
 </html>";
