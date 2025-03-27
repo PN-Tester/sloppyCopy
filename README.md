@@ -14,7 +14,7 @@ SloppyCopy now supports transfering HTML data via specially crafted data-uri ! U
 ![](https://github.com/PN-Tester/sloppyCopy/blob/main/data-uri.gif)
 
 # Usage
-```sloppyCopy.exe <file> <delay> [--portable] [--citrix] [--uri]```
+```sloppyCopy.exe <file> <delay> [--portable] [--citrix] [--uri] [--throttle <ms>]```
 
 
 Simply point sloppyCopy.exe at the file you wish to parse for input, and specify the time in seconds between run and start of keyboard simulation. In this timeframe, click somewhere in the target application where your keyboard events will go.
@@ -22,6 +22,8 @@ Simply point sloppyCopy.exe at the file you wish to parse for input, and specify
 SloppyCopy can also be used on executable files, it will compress and base64 encode the data before performing the simulation. just add the optional ```--portable``` argument. Once the data has been transfered to your target, follow the instruction in the terminal output to base64 decode and decompress the binary to its original state.
 
 When used with the ```--uri``` flag, sloppyCopy will perform some transformation on the input data in order to optimize transport. Your input html file will be gzip compressed using the DEFLATE algorithm, base64 encoded, and added to a sloppyCopy HTML template as the variable Base64GzipData. The template will then auto populate with the sloppyCopy title and theme, and include a custom Gzip decompression function which uses only native browser functionality, avoiding any dependencies on external libraries (in case your target environment has no outbound internet access). The template will include a custom <script> element which will dynamically decompress your original content into the template using HTML preprocessing. The resultant page is base64 encoded and sent via sloppyCopy simulation as a data uri to your target. Encapsulating the original document this way allows us to use compression while maintaining a standard URI with mime-type text/html, which can bypass most security policies (unlike application/gzip or equivalent).
+
+If you notice that sloppyCopy is messing up your data transfer because the target application is processing keys too slowly, try using the ```--throttle``` option to manually control time between simulated keypresses. Try increasing to 30 or higher in cases of where applications are very slow to process simulated keys. Values higher than 100 will dramatically impact data transfer rates.
 
 CITRIX NOTE : Citrix environments use special scancodes added to keyboard events in order to differentiate between hardware generated events and the resultant citrix generated virtual event.
 This behaviour causes a duplication of transfered data due to double registration of the keyboard event, meaning *abcdef* becomes *aabbccddeeff* on the target system! Very annoying!
