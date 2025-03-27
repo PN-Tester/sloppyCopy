@@ -51,9 +51,9 @@ class Program
 
     static void Main(string[] args)
     {
-        if (args.Length < 2 || args.Length > 5)
+        if (args.Length < 2 || args.Length > 7)
         {
-            Console.WriteLine("Usage: sloppyCopy.exe <file> <delay> [--portable] [--citrix] [--uri]");
+            Console.WriteLine("Usage: sloppyCopy.exe <file> <delay> [--portable] [--citrix] [--uri] [--throttle <ms>]");
             return;
         }
 
@@ -74,6 +74,7 @@ class Program
         bool isPortable = false;
         bool isCitrix = false;
         bool isUriMode = false;
+        int throttleDelay = -1; // Default to -1 (meaning not set)
 
         for (int i = 2; i < args.Length; i++)
         {
@@ -90,6 +91,16 @@ class Program
             {
                 isUriMode = true;
             }
+            else if (args[i] == "--throttle" && i + 1 < args.Length && int.TryParse(args[i + 1], out int throttleValue))
+            {
+                throttleDelay = throttleValue;
+                i++; // Skip next arg since it's used as throttle value
+            }
+            else
+            {
+                Console.WriteLine("[-] Invalid argument: " + args[i]);
+                return;
+            }
         }
 
         if (isUriMode && isPortable)
@@ -103,18 +114,28 @@ class Program
         Console.WriteLine($"[!] Original file size: {fileSize} bytes");
 
         double transferRate = (isPortable || isUriMode) ? 64.0 : 336.0;
-        double estimatedTimeSeconds = fileSize / transferRate;
-        TimeSpan estimatedTime = TimeSpan.FromSeconds(estimatedTimeSeconds);
 
-        if (!isPortable && !isUriMode)
+        if (throttleDelay == -1)
         {
-            Console.WriteLine($"[!] Estimated time to completion (regular): {estimatedTime.Minutes} minutes {estimatedTime.Seconds} seconds");
+            double estimatedTimeSeconds = fileSize / transferRate;
+            TimeSpan estimatedTime = TimeSpan.FromSeconds(estimatedTimeSeconds);
+
+            if (!isPortable && !isUriMode)
+            {
+                Console.WriteLine($"[!] Estimated time to completion (regular): {estimatedTime.Minutes} minutes {estimatedTime.Seconds} seconds");
+            }
+        }
+        else
+        {
+            if (!isPortable && !isUriMode)
+            {
+                Console.WriteLine("[!] Estimated time to completion: Not provided due to manual throttling.");
+            }
         }
 
         if (isPortable)
         {
             string tempTarGz = Path.Combine(Path.GetTempPath(), "temp_sloppyCopy.tar.gz");
-
             Console.WriteLine("[!] Creating compressed copy...");
             Process.Start("tar", $"-czf \"{tempTarGz}\" \"{filePath}\"")?.WaitForExit();
 
@@ -130,9 +151,16 @@ class Program
 
             Console.WriteLine($"[!] Base64 compressed data size: {base64Size} bytes");
 
-            double estimatedPortableTimeSeconds = base64Size / transferRate;
-            TimeSpan estimatedPortableTime = TimeSpan.FromSeconds(estimatedPortableTimeSeconds);
-            Console.WriteLine($"[!] Estimated time to completion (Base64 compressed): {estimatedPortableTime.Minutes} minutes {estimatedPortableTime.Seconds} seconds");
+            if (throttleDelay == -1)
+            {
+                double estimatedPortableTimeSeconds = base64Size / transferRate;
+                TimeSpan estimatedPortableTime = TimeSpan.FromSeconds(estimatedPortableTimeSeconds);
+                Console.WriteLine($"[!] Estimated time to completion (Base64 compressed): {estimatedPortableTime.Minutes} minutes {estimatedPortableTime.Seconds} seconds");
+            }
+            else
+            {
+                Console.WriteLine("[!] Estimated time to completion: Not provided due to manual throttling.");
+            }
 
             content = base64Data;
             File.Delete(tempTarGz);
@@ -140,11 +168,7 @@ class Program
         else if (isUriMode)
         {
             Console.WriteLine("[!] Creating HTML page with GZIP-compressed data embedded...");
-
-            // Read the file bytes
             byte[] fileData = File.ReadAllBytes(filePath);
-
-            // Gzip compress the data
             byte[] compressedData;
             using (MemoryStream compressedStream = new MemoryStream())
             {
@@ -155,24 +179,25 @@ class Program
                 compressedData = compressedStream.ToArray();
             }
 
-            // Base64 encode the gzip compressed data
             string base64Data = Convert.ToBase64String(compressedData);
-
-            // Generate the new HTML page with dynamic decompression logic
             string newHtmlPage = GenerateHtmlWithDecompression(base64Data);
-
-            // Base64 encode the new HTML page (the one containing decompression logic)
             string base64EncodedHtml = Convert.ToBase64String(Encoding.UTF8.GetBytes(newHtmlPage));
-
             content = "data:text/html;base64," + base64EncodedHtml;
 
             long base64Size = content.Length;
 
             Console.WriteLine($"[!] Base64 encoded HTML size (including decompression logic): {base64Size} bytes");
 
-            double estimatedUriTimeSeconds = base64Size / transferRate;
-            TimeSpan estimatedUriTime = TimeSpan.FromSeconds(estimatedUriTimeSeconds);
-            Console.WriteLine($"[!] Estimated time to completion (HTML with GZIP data): {estimatedUriTime.Minutes} minutes {estimatedUriTime.Seconds} seconds");
+            if (throttleDelay == -1)
+            {
+                double estimatedUriTimeSeconds = base64Size / transferRate;
+                TimeSpan estimatedUriTime = TimeSpan.FromSeconds(estimatedUriTimeSeconds);
+                Console.WriteLine($"[!] Estimated time to completion (HTML with GZIP data): {estimatedUriTime.Minutes} minutes {estimatedUriTime.Seconds} seconds");
+            }
+            else
+            {
+                Console.WriteLine("[!] Estimated time to completion: Not provided due to manual throttling.");
+            }
         }
         else
         {
@@ -181,11 +206,18 @@ class Program
 
         Console.WriteLine($"[!] Waiting for {delayInSeconds} seconds...");
         Thread.Sleep(delayInSeconds * 1000);
-
+        if (throttleDelay != -1)
+        {
+            Console.WriteLine($"[!] Setting throttling to {throttleDelay} ms");
+        }
         foreach (char c in content)
         {
             SimulateKeyPress(c, isCitrix);
-            if (isPortable || isUriMode)
+            if (throttleDelay != -1)
+            {
+                Thread.Sleep(throttleDelay);
+            }
+            else if (isPortable || isUriMode)
             {
                 Thread.Sleep(1);
             }
@@ -199,9 +231,11 @@ class Program
         }
         if (isUriMode)
         {
-            Console.WriteLine("[!] To view the file, simply open the data URI in a browser.");
+            Console.WriteLine("[!] To view the file, open the data URI in a browser.");
         }
     }
+
+
 
     // Generate the new HTML page with gzip data embedded and dynamic decompression logic
     public static string GenerateHtmlWithDecompression(string base64GzipData)
