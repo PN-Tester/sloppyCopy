@@ -31,4 +31,4 @@ To prevent this, use the ```--citrix``` flag for compatibility mode. This will s
 
 ```~``` character for some reason is not supported. If you absolutely need tilde, use ```--citrix``` with ```--portable``` option to copy the compressed base64 and avoid errors. 
 
-WARNING : There is currently no way to stop sloppyCopy once the simulation begins, so ensure you have your cursor in the right place to receive keyboard events or things will get messy !
+WARNING : There is currently no way to stop sloppyCopy once the simulation begins, so ensure you have your cursor in the right place to receive keyboard events or things will get messy ! You can always try quickly clicking on the the terminal window where sloppyCopy is running and ctrl-c , but results may vary.
